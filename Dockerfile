@@ -1,12 +1,22 @@
-FROM node:22-bookworm
+FROM python:3.12-bookworm
 
+WORKDIR /app
+
+# Install FFmpeg
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends ffmpeg \
+    && apt-get install -y --no-install-recommends ffmpeg git \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-COPY . /app/
-WORKDIR /app/
-RUN pip3 install --no-cache-dir -U -r requirements.txt
+# Copy requirements first for Docker cache
+COPY requirements.txt .
 
-CMD bash start
+# Install Python dependencies
+RUN pip install --no-cache-dir --upgrade pip \
+    && pip install --no-cache-dir -r requirements.txt
+
+# Copy bot source
+COPY . .
+
+# Start bot
+CMD ["python", "main.py"]
